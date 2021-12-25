@@ -1,29 +1,26 @@
 package pkg
 
 import (
-	"crypto/sha1"
 	"fmt"
-	"log"
 	"os"
 	"path"
-	"strconv"
 )
 
-type Writer interface {
-	Write(file []byte, name string) error
+type FSInteraction interface {
+	Write(file *DataFile, name string) error
+	Read(file *DataFile, name string) ([]byte, error)
 }
 
 var (
 	NewWriter = New
 )
 
-type WriterImpl struct {
+type FSInteractionImpl struct {
 	FileDir     string
 	FilePattern string
-	BlockSize   uint8
 }
 
-func New(path string) (Writer, error) {
+func New(path string) (FSInteraction, error) {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		if !os.IsNotExist(err) {
 			return nil, err
@@ -33,70 +30,22 @@ func New(path string) (Writer, error) {
 		}
 	}
 
-	return &WriterImpl{
+	return &FSInteractionImpl{
 		FileDir:     path,
 		FilePattern: "data",
-		BlockSize:   4,
 	}, nil
 }
 
-type Block struct {
-	Hash [20]byte
-	Data []byte
-	Id   uint32
-}
-
-type Blocks []Block
-
-func (b *Block) toByte() (bytes []byte) {
-	bytes = make([]byte, 0, len(b.Hash)+len(b.Data)+4)
-	bytes = append(bytes, b.Hash[:20]...)
-	bytes = append(bytes, b.Data...)
-	bytes = append(bytes, []byte(strconv.Itoa(int(b.Id)))...)
-	return
-}
-
-func (bs *Blocks) toByte() (bytes []byte) {
-	bytes = make([]byte, 0, len(*bs)*24)
-	for _, block := range *bs {
-		bytes = append(bytes, block.toByte()...)
-	}
-	return
-}
-
-var (
-	blocks      Blocks
-	blockHashId = make(map[string]uint32, 0)
-)
-
-func (w *WriterImpl) Write(file []byte, name string) error {
+func (w *FSInteractionImpl) Write(file *DataFile, name string) error {
 	var (
-		blockSize = int(w.BlockSize)
-		idx       = blockSize
-		filePath  = path.Join(w.FileDir, w.FilePattern+"-"+name)
+		filePath = path.Join(w.FileDir, w.FilePattern+"-"+name)
 	)
 
 	if _, err := os.Stat(filePath); !os.IsNotExist(err) {
 		return fmt.Errorf("file %s exists", filePath)
 	}
 
-	for {
-		if idx <= len(file)-1 {
-			if err := w.storeBlock(file[idx-blockSize : idx]); err != nil {
-				return fmt.Errorf("store block failed: %+v", err)
-			}
-		} else {
-			endSlice := make([]byte, blockSize)
-			endSlice = append(file[idx-blockSize:], endSlice...)
-			if err := w.storeBlock(endSlice[:blockSize]); err != nil {
-				return fmt.Errorf("store block failed: %+v", err)
-			}
-			break
-		}
-		idx += blockSize
-	}
-
-	err := os.WriteFile(filePath, blocks.toByte(), os.ModePerm)
+	err := os.WriteFile(filePath, file.toByte(), os.ModePerm)
 	if err != nil {
 		return err
 	}
@@ -104,17 +53,29 @@ func (w *WriterImpl) Write(file []byte, name string) error {
 	return nil
 }
 
-func (w *WriterImpl) storeBlock(block []byte) error {
-	log.Printf(string(block))
+func (w *FSInteractionImpl) Read(file *DataFile, name string) ([]byte, error) {
+	var (
+		filePath  = path.Join(w.FileDir, w.FilePattern+"-"+name)
+		blocks    []Block
+		blockSize = int(file.blockSize)
+	)
 
-	hsha1 := sha1.Sum(block)
-	id := uint32(len(blocks))
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, err
+	}
 
-	blocks = append(blocks, Block{
-		Hash: hsha1,
-		Data: block,
-		Id:   id,
-	})
+	for i := 0; i < len(data); i += blockSize {
+		if i+blockSize > len(data) {
+			return nil, fmt.Errorf("data is corrupted")
+		}
 
-	return nil
+		block := Block{data[i : i+blockSize]}
+		blocks = append(blocks, block)
+	}
+
+	fmt.Println(blocks)
+	fmt.Println(file.blocks)
+
+	return nil, nil
 }
