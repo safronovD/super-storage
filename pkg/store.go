@@ -53,7 +53,7 @@ func (w *FSInteractionImpl) Write(file *DataFile, name string) error {
 	return nil
 }
 
-func (w *FSInteractionImpl) Read(file *DataFile, name string) ([]byte, error) {
+func (w *FSInteractionImpl) Read(file *DataFile, name string) (result []byte, err error) {
 	var (
 		filePath  = path.Join(w.FileDir, w.FilePattern+"-"+name)
 		blocks    []Block
@@ -77,5 +77,9 @@ func (w *FSInteractionImpl) Read(file *DataFile, name string) ([]byte, error) {
 	fmt.Println(blocks)
 	fmt.Println(file.blocks)
 
-	return nil, nil
+	for _, pos := range file.posBlockId {
+		result = append(result, blocks[pos].Data...)
+	}
+
+	return
 }

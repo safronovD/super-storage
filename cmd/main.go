@@ -15,7 +15,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	data := []byte("HelloHello world")
+	data := []byte("HellHello worlddddffff")
 	size := uint8(4)
 
 	dataFile := pkg.CreateDataFile(data, size)
@@ -23,6 +23,9 @@ func main() {
 	err = writer.Write(dataFile, "test")
 	log.Print(err)
 
-	_, err = writer.Read(dataFile, "test")
+	result, err := writer.Read(dataFile, "test")
 	log.Print(err)
+
+	log.Printf("in: %s\n", string(data))
+	log.Printf("out: %s\n", string(result))
 }

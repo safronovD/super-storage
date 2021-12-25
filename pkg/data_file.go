@@ -17,7 +17,7 @@ type DataFile struct {
 	blocks    []Block
 	// Id - position in blocks array
 	blockHashId map[interface{}]int
-	posBlockId  map[int]int
+	posBlockId  []int
 }
 
 func CreateDataFile(data []byte, blockSize uint8) *DataFile {
@@ -29,17 +29,17 @@ func CreateDataFile(data []byte, blockSize uint8) *DataFile {
 			blockSize:   blockSize,
 			blocks:      []Block{},
 			blockHashId: map[interface{}]int{},
-			posBlockId:  map[int]int{},
+			posBlockId:  []int{},
 		}
 	)
 
 	for {
 		if idx <= len(data)-1 {
-			df.add(data[idx-blockSizeInt:idx], pos)
+			df.add(data[idx-blockSizeInt : idx])
 		} else {
 			endSlice := make([]byte, blockSize)
 			endSlice = append(data[idx-blockSizeInt:], endSlice...)
-			df.add(endSlice[:blockSize], pos)
+			df.add(endSlice[:blockSize])
 			break
 		}
 		idx += blockSizeInt
@@ -49,7 +49,7 @@ func CreateDataFile(data []byte, blockSize uint8) *DataFile {
 	return df
 }
 
-func (df *DataFile) add(data []byte, pos int) {
+func (df *DataFile) add(data []byte) {
 	var id int
 
 	hsha1 := sha1.Sum(data)
@@ -62,7 +62,7 @@ func (df *DataFile) add(data []byte, pos int) {
 		df.blockHashId[hsha1] = id
 	}
 
-	df.posBlockId[pos] = id
+	df.posBlockId = append(df.posBlockId, id)
 }
 
 func (df *DataFile) toByte() (bytes []byte) {
