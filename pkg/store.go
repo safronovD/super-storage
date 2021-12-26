@@ -74,8 +74,8 @@ func (w *FSInteractionImpl) Read(file *DataFile, name string) (result []byte, er
 		blocks = append(blocks, block)
 	}
 
-	fmt.Println(blocks)
-	fmt.Println(file.blocks)
+	fmt.Println(len(blocks))
+	fmt.Println(len(file.blocks))
 
 	for _, pos := range file.posBlockId {
 		result = append(result, blocks[pos].Data...)
