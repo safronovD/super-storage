@@ -1,9 +1,5 @@
 package pkg
 
-import (
-	"crypto/sha1"
-)
-
 type Block struct {
 	Data []byte
 }
@@ -14,19 +10,21 @@ func (b *Block) toByte() []byte {
 
 type DataFile struct {
 	blockSize uint8
+	hashFun   HashFun
 	blocks    []Block
 	// Id - position in blocks array
 	blockHashId map[interface{}]int
 	posBlockId  []int
 }
 
-func CreateDataFile(data []byte, blockSize uint8) *DataFile {
+func CreateDataFile(data []byte, blockSize uint8, hashFun string) *DataFile {
 	var (
 		blockSizeInt = int(blockSize)
 		idx          = blockSizeInt
 		pos          = 0
 		df           = &DataFile{
 			blockSize:   blockSize,
+			hashFun:     getHashFun(hashFun),
 			blocks:      []Block{},
 			blockHashId: map[interface{}]int{},
 			posBlockId:  []int{},
@@ -52,7 +50,7 @@ func CreateDataFile(data []byte, blockSize uint8) *DataFile {
 func (df *DataFile) add(data []byte) {
 	var id int
 
-	hsha1 := sha1.Sum(data)
+	hsha1 := df.hashFun.getHash(data)
 
 	if val, ok := df.blockHashId[hsha1]; ok {
 		id = val
