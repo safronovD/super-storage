@@ -8,6 +8,7 @@ import (
 )
 
 type DataFileManager interface {
+	Write(fileID string, data []byte, blockSize uint, hashFun string) (*pkg.DataFile, error)
 }
 
 type dataFileManagerImpl struct {
@@ -26,13 +27,13 @@ func NewDataFileManager(storage storage.HashStorage, fileLink string) DataFileMa
 	}
 }
 
-func (manager *dataFileManagerImpl) Write(fileID string, data []byte, blockSize uint, hashFun string) error {
+func (manager *dataFileManagerImpl) Write(fileID string, data []byte, blockSize uint, hashFun string) (*pkg.DataFile, error) {
 	if exist, err := manager.storage.CheckFileID(fileID); exist == 1 {
 		if err != nil {
-			return err
+			return nil, err
 		}
 		log.Printf("This file is alredy exist")
-		return fmt.Errorf("this file is already exist")
+		return nil, fmt.Errorf("this file is already exist")
 	}
 
 	manager.dataFile = &pkg.DataFile{
@@ -50,17 +51,19 @@ func (manager *dataFileManagerImpl) Write(fileID string, data []byte, blockSize 
 	for {
 		if idx <= len(data)-1 {
 			if err := manager.add(data[idx-blockSizeInt:idx], blockSizeInt, fileID); err != nil {
-				return err
+				return nil, err
 			}
 		} else {
 			endSlice := make([]byte, blockSize)
 			endSlice = append(data[idx-blockSizeInt:], endSlice...)
 			if err := manager.add(data[idx-blockSizeInt:idx], blockSizeInt, fileID); err != nil {
-				return err
+				return nil, err
 			}
 		}
 		idx += blockSizeInt
 	}
+
+	return manager.dataFile, nil
 }
 
 func (manager *dataFileManagerImpl) Read(fileID string) error {
