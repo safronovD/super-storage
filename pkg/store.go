@@ -57,7 +57,7 @@ func (w *FSInteractionImpl) Read(file *DataFile, name string) (result []byte, er
 	var (
 		filePath  = path.Join(w.FileDir, w.FilePattern+"-"+name)
 		blocks    []Block
-		blockSize = int(file.blockSize)
+		blockSize = int(file.BlockSize)
 	)
 
 	data, err := os.ReadFile(filePath)
@@ -75,9 +75,9 @@ func (w *FSInteractionImpl) Read(file *DataFile, name string) (result []byte, er
 	}
 
 	fmt.Println(len(blocks))
-	fmt.Println(len(file.blocks))
+	fmt.Println(len(file.Blocks))
 
-	for _, pos := range file.posBlockId {
+	for _, pos := range file.PosBlockId {
 		result = append(result, blocks[pos].Data...)
 	}
 

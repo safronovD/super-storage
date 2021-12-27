@@ -14,7 +14,8 @@ var (
 type HashStorage interface {
 	WriteNewHash(hashKey string, fileLink string, blockPosition int) error
 	WriteBlockPosition(fileID string, hash string) error
-	Check(hash string) (int64, error)
+	CheckFileID(fileID string) (int64, error)
+	CheckHash(hash string) (int64, []string, error)
 	Read(fileID string) ([]interface{}, error)
 	Delete()
 }
@@ -79,14 +80,33 @@ func (client *redisHashStorageImpl) WriteBlockPosition(fileID string, hash strin
 	return nil
 }
 
-func (client *redisHashStorageImpl) Check(hash string) (int64, error) {
-	check, err := client.hashTable.Exists(ctx, hash).Result()
+func (client *redisHashStorageImpl) CheckFileID(fileID string) (int64, error) {
+	check, err := client.fileTable.Exists(ctx, fileID).Result()
 	if err != nil {
-		wrappedErr := fmt.Errorf("error finding key in hash table: %w", err)
+		wrappedErr := fmt.Errorf("error finding key in file table: %w", err)
 		return 0, wrappedErr
 	}
 
 	return check, nil
+}
+
+func (client *redisHashStorageImpl) CheckHash(hash string) (int64, []string, error) {
+	var link []string
+	check, err := client.hashTable.Exists(ctx, hash).Result()
+	if err != nil {
+		wrappedErr := fmt.Errorf("error finding key in hash table: %w", err)
+		return 0, nil, wrappedErr
+	}
+
+	if check == 1 {
+		link, err = client.hashTable.SMembers(ctx, hash).Result()
+		if err != nil {
+			wrappedErr := fmt.Errorf("error getting key in hash table: %w", err)
+			return 0, nil, wrappedErr
+		}
+	}
+
+	return check, link, nil
 }
 
 func (client *redisHashStorageImpl) Read(fileID string) ([]interface{}, error) {

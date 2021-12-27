@@ -14,7 +14,7 @@ type HashFun struct {
 	hash.Hash
 }
 
-func getHashFun(hashName string) HashFun {
+func GetHashFun(hashName string) HashFun {
 	switch hashName {
 	case "SHA1":
 		return HashFun{sha1.New()}
@@ -33,7 +33,7 @@ func getHashFun(hashName string) HashFun {
 	}
 }
 
-func (h *HashFun) getHash(data []byte) string {
+func (h *HashFun) GetHash(data []byte) string {
 	h.Reset()
 	h.Write(data)
 	return string(h.Sum(nil))
