@@ -10,6 +10,7 @@ import (
 
 type DataFileManager interface {
 	Write(fileID string, data []byte, blockSize uint, hashFun string) (*pkg.DataFile, error)
+	Read(fileID string) ([]int, error)
 }
 
 type dataFileManagerImpl struct {
