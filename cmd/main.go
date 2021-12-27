@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/safronovD/super-storage/pkg"
 	"log"
 )
@@ -16,11 +17,15 @@ var (
 	modeW = flag.Bool("write", false, "write")
 	modeD = flag.Bool("delete", false, "delete")
 	modeL = flag.Bool("list", false, "list")
+	modeC = flag.Bool("compare", false, "compare")
 
 	path = flag.String("path", "", "path")
 	name = flag.String("name", "", "name")
 	size = flag.Uint("size", 256, "size")
 	hash = flag.String("hash", "SHA256", "hash")
+
+	in  = flag.String("in", "", "in")
+	out = flag.String("out", "", "out")
 )
 
 func performWrite(name, path, hash string, blockSize uint) error {
@@ -79,6 +84,25 @@ func performList() error {
 	return nil
 }
 
+func performCompare(in, out string) error {
+	manager := &pkg.FSManager{}
+
+	dataIn, err := manager.ReadFile(in)
+	if err != nil {
+		return err
+	}
+
+	dataOut, err := manager.ReadFile(out)
+	if err != nil {
+		return err
+	}
+
+	result := pkg.CompareBytes(dataIn, dataOut)
+	fmt.Printf("Percent - %f%%\n", result)
+
+	return nil
+}
+
 func main() {
 	var (
 		err error
@@ -95,6 +119,9 @@ func main() {
 		err = performDelete(*name)
 	case *modeL:
 		err = performList()
+	case *modeC:
+		err = performCompare(*in, *out)
+
 	}
 
 	if err != nil {
