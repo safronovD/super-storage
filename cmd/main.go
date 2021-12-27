@@ -18,7 +18,7 @@ func main() {
 	}
 
 	//data := []byte("HellHello worlddddffff")
-	size := uint8(4)
+	size := uint(4)
 
 	data, err := manager.ReadFile("/home/user/test/cosi.mp4")
 	if err != nil {
