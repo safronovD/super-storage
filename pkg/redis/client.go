@@ -121,7 +121,7 @@ func (client *redisHashStorageImpl) Read(fileID string) ([][]string, error) {
 		result [][]string
 	)
 
-	for idx = 1; idx < length; idx++ {
+	for idx = 0; idx < length; idx++ {
 		hash, err := client.fileTable.LIndex(ctx, fileID, idx).Result()
 		if err != nil {
 			wrappedErr := fmt.Errorf("error taking elem from list by index: %w", err)
