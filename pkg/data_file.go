@@ -9,7 +9,7 @@ func (b *Block) toByte() []byte {
 }
 
 type DataFile struct {
-	blockSize uint8
+	blockSize uint
 	hashFun   HashFun
 	blocks    []Block
 	// Id - position in blocks array
@@ -17,7 +17,7 @@ type DataFile struct {
 	posBlockId  []int
 }
 
-func CreateDataFile(data []byte, blockSize uint8, hashFun string) *DataFile {
+func CreateDataFile(data []byte, blockSize uint, hashFun string) *DataFile {
 	var (
 		blockSizeInt = int(blockSize)
 		idx          = blockSizeInt

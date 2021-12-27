@@ -16,7 +16,7 @@ func main() {
 	}
 
 	data := []byte("HellHello worlddddffff")
-	size := uint8(4)
+	size := uint(1024)
 
 	dataFile := pkg.CreateDataFile(data, size, "SHA1")
 
