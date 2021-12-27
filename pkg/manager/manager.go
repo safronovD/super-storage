@@ -61,6 +61,7 @@ func (manager *dataFileManagerImpl) Write(fileID string, data []byte, blockSize 
 			if err := manager.add(endSlice[:blockSize], blockSizeInt, fileID); err != nil {
 				return nil, err
 			}
+			break
 		}
 		idx += blockSizeInt
 	}
@@ -107,7 +108,7 @@ func (manager *dataFileManagerImpl) add(data []byte, blockSizeInt int, fileID st
 			return err
 		}
 		manager.dataFile.Add(data, manager.lastBlockPosition)
-		manager.lastBlockPosition += blockSizeInt
+		manager.lastBlockPosition++
 	}
 	if err := manager.storage.WriteBlockPosition(fileID, hash); err != nil {
 		return err

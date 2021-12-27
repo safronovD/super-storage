@@ -72,22 +72,30 @@ func performWrite(name, path, hash string, blockSize uint) error {
 	return nil
 }
 
-func performRead(name, path string) error {
-	manager := &pkg.FSManager{}
+func performRead(name, path string, size uint) error {
+	redisS, err := redis.NewRedisHashImpl(config)
+	if err != nil {
+		return err
+	}
+
+	fsManager := &pkg.FSManager{}
 	writer, err := pkg.NewWriter(fsPath)
 	if err != nil {
 		return err
 	}
 
-	//get DataFile FromDB
-	dataFile := &pkg.DataFile{}
-
-	result, err := writer.Read(dataFile, name)
+	dfManager := manager.NewDataFileManager(redisS, name)
+	positions, err := dfManager.Read(name)
 	if err != nil {
 		return err
 	}
 
-	err = manager.WriteFile(path, result)
+	result, err := writer.Read(name, int(size), positions)
+	if err != nil {
+		return err
+	}
+
+	err = fsManager.WriteFile(path, result)
 	if err != nil {
 		return err
 	}
@@ -135,7 +143,7 @@ func main() {
 	case *modeW:
 		err = performWrite(*name, *path, *hash, *size)
 	case *modeR:
-		err = performRead(*name, *path)
+		err = performRead(*name, *path, *size)
 	case *modeD:
 		err = performDelete(*name)
 	case *modeL:
