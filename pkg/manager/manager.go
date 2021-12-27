@@ -5,6 +5,7 @@ import (
 	"github.com/safronovD/super-storage/pkg"
 	storage "github.com/safronovD/super-storage/pkg/redis"
 	"log"
+	"strconv"
 )
 
 type DataFileManager interface {
@@ -39,7 +40,7 @@ func (manager *dataFileManagerImpl) Write(fileID string, data []byte, blockSize 
 		BlockSize:  blockSize,
 		HashFun:    pkg.GetHashFun(hashFun),
 		Blocks:     []pkg.Block{},
-		PosBlockId: nil,
+		PosBlockId: []int{},
 	}
 
 	var (
@@ -63,8 +64,32 @@ func (manager *dataFileManagerImpl) Write(fileID string, data []byte, blockSize 
 	}
 }
 
-func (manager *dataFileManagerImpl) Read(fileID string) error {
-	return nil
+func (manager *dataFileManagerImpl) Read(fileID string) ([]int, error) {
+	exist, err := manager.storage.CheckFileID(fileID)
+	if err != nil {
+		return nil, err
+	}
+	if exist != 1 {
+		return nil, fmt.Errorf("this file doesn't exist %v", fileID)
+	}
+
+	fileMeta, err := manager.storage.Read(fileID)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]int, 0)
+	for _, elem := range fileMeta {
+		position, err := strconv.Atoi(elem[0])
+		if err != nil {
+			position, err = strconv.Atoi(elem[1])
+			if err != nil {
+				return nil, err
+			}
+		}
+		result = append(result, position)
+	}
+	return result, nil
 }
 
 func (manager *dataFileManagerImpl) add(data []byte, blockSizeInt int, fileID string) error {

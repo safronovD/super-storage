@@ -8,7 +8,7 @@ import (
 
 type FSInteraction interface {
 	Write(file *DataFile, name string) error
-	Read(file *DataFile, name string) ([]byte, error)
+	Read(name string, blockSizeInt int, positionArr []int) ([]byte, error)
 }
 
 var (
@@ -53,11 +53,11 @@ func (w *FSInteractionImpl) Write(file *DataFile, name string) error {
 	return nil
 }
 
-func (w *FSInteractionImpl) Read(file *DataFile, name string) (result []byte, err error) {
+func (w *FSInteractionImpl) Read(name string, blockSizeInt int, positionArr []int) (result []byte, err error) {
 	var (
 		filePath  = path.Join(w.FileDir, w.FilePattern+"-"+name)
 		blocks    []Block
-		blockSize = int(file.BlockSize)
+		blockSize = blockSizeInt
 	)
 
 	data, err := os.ReadFile(filePath)
@@ -75,9 +75,8 @@ func (w *FSInteractionImpl) Read(file *DataFile, name string) (result []byte, er
 	}
 
 	fmt.Println(len(blocks))
-	fmt.Println(len(file.Blocks))
 
-	for _, pos := range file.PosBlockId {
+	for _, pos := range positionArr {
 		result = append(result, blocks[pos].Data...)
 	}
 

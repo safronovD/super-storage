@@ -33,7 +33,7 @@ func TestRedisHashStorageImpl(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	check, err := rds.Check(hash)
+	check, _, err := rds.CheckHash(hash)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -16,7 +16,7 @@ type HashStorage interface {
 	WriteBlockPosition(fileID string, hash string) error
 	CheckFileID(fileID string) (int64, error)
 	CheckHash(hash string) (int64, []string, error)
-	Read(fileID string) ([]interface{}, error)
+	Read(fileID string) ([][]string, error)
 	Delete()
 }
 
@@ -109,7 +109,7 @@ func (client *redisHashStorageImpl) CheckHash(hash string) (int64, []string, err
 	return check, link, nil
 }
 
-func (client *redisHashStorageImpl) Read(fileID string) ([]interface{}, error) {
+func (client *redisHashStorageImpl) Read(fileID string) ([][]string, error) {
 	length, err := client.fileTable.LLen(ctx, fileID).Result()
 	if err != nil {
 		wrappedErr := fmt.Errorf("error reading lenght from file table: %w", err)
@@ -118,7 +118,7 @@ func (client *redisHashStorageImpl) Read(fileID string) ([]interface{}, error) {
 
 	var (
 		idx    int64
-		result []interface{}
+		result [][]string
 	)
 
 	for idx = 1; idx < length; idx++ {
