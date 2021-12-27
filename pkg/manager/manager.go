@@ -57,7 +57,7 @@ func (manager *dataFileManagerImpl) Write(fileID string, data []byte, blockSize 
 		} else {
 			endSlice := make([]byte, blockSize)
 			endSlice = append(data[idx-blockSizeInt:], endSlice...)
-			if err := manager.add(data[idx-blockSizeInt:idx], blockSizeInt, fileID); err != nil {
+			if err := manager.add(endSlice[:blockSize], blockSizeInt, fileID); err != nil {
 				return nil, err
 			}
 		}
