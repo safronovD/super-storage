@@ -4,11 +4,23 @@ import (
 	"flag"
 	"fmt"
 	"github.com/safronovD/super-storage/pkg"
+	"github.com/safronovD/super-storage/pkg/manager"
+	"github.com/safronovD/super-storage/pkg/redis"
 	"log"
 )
 
 const (
 	fsPath = "/tmp/data"
+)
+
+var (
+	config = &redis.Config{
+		Hostname: "0.0.0.0:6379",
+		Username: "",
+		Password: "",
+		HashDB:   0,
+		FileDB:   1,
+	}
 )
 
 // flags
@@ -29,21 +41,30 @@ var (
 )
 
 func performWrite(name, path, hash string, blockSize uint) error {
-	manager := &pkg.FSManager{}
+	redisS, err := redis.NewRedisHashImpl(config)
+	if err != nil {
+		return err
+	}
+
+	fsManager := &pkg.FSManager{}
 
 	writer, err := pkg.NewWriter(fsPath)
 	if err != nil {
 		return err
 	}
 
-	data, err := manager.ReadFile(path)
+	data, err := fsManager.ReadFile(path)
 	if err != nil {
 		return err
 	}
 
-	dataFile := pkg.CreateDataFile(data, blockSize, hash)
+	dfManager := manager.NewDataFileManager(redisS, name)
+	df, err := dfManager.Write(name, data, blockSize, hash)
+	if err != nil {
+		return err
+	}
 
-	return writer.Write(dataFile, name)
+	return writer.Write(df, name)
 	if err != nil {
 		return err
 	}
